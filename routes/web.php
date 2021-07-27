@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ExploreController;
+use App\Http\Controllers\ShowProfileController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,6 +19,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/test', function () {
+    return view('tweets/index');
+})->name('home');
+
+
+
+Route::get('/profiles/{user:username}', ShowProfileController::class)->name('profile');
+
+Route::get('/explore', ExploreController::class);
 
 Route::middleware(['auth:sanctum', 'verified'])->get('/dashboard', function () {
     return view('dashboard');

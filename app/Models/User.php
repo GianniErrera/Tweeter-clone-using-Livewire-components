@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+use App\Http\Traits\Followable;
 
 class User extends Authenticatable
 {
@@ -17,6 +18,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
+    use Followable;
 
     /**
      * The attributes that are mass assignable.
@@ -24,10 +26,13 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name',
         'username',
+        'name',
+        'bio',
         'email',
         'password',
+        'avatar',
+        'banner'
     ];
 
     /**
@@ -59,4 +64,52 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function getProfilePhotoPathAttribute($value) {
+        return asset($value ? 'storage/' . $value : '/images/default-avatar.jpeg');
+    }
+
+    public function getBannerAttribute($value) {
+        return asset($value ? 'storage/' . $value : '/images/default-profile-banner.jpg');
+    }
+
+    public function tweets() {
+        return $this->hasMany(Tweet::class)
+            ->withLikes()
+            ->latest();
+    }
+
+    public function timeline() {
+        $followedIds = $this->followed->pluck('id');
+        $followedIds->push($this->id);
+        return Tweet::whereIn('user_id', $followedIds)
+            ->withLikes()
+            ->latest()
+            ->get();
+    }
+
+    public function ciao() {
+        $followedIds = $this->followed->pluck('id');
+        $followedIds->push($this->id);
+        return Tweet::whereIn('user_id', $followedIds)
+            ->withLikes()
+            ->latest()
+            ->get();
+
+    }
+
+    public function path($append = "") {
+        $path = route('profile', $this->username);
+        return $append ? "{$path}/$append" : $path;
+    }
+
+
+    public function getRouteKeyName() {
+        return 'name';
+    }
+
+    public function likes() {
+        return $this->hasMany(Like::class);
+    }
+
 }
